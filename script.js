@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function() {
         "KEGGS": {
             displayName: "KEGG Pathways",
             files: [
-                // { displayName: "Adama vs Erer (Down Regulated)", filePath: "data/KEGGS/Down_Adama_vs_Erer_KEGG.csv", type: "KEGG" }
                 { displayName: "Adama vs Erer (Up Regulated)", filePath: "data/KEGGS/Up_Adama_vs_Erer_KEGG.csv", type: "KEGG" },
                 { displayName: "Adama vs Erer (Down Regulated)", filePath: "data/KEGGS/Down_Adama_vs_Erer_KEGG.csv", type: "KEGG" },
                 { displayName: "Jijiga vs Erer (Up Regulated)", filePath: "data/KEGGS/Down_Erer_vs_Jijiga_KEGG.csv", type: "KEGG" },
@@ -47,18 +46,63 @@ document.addEventListener("DOMContentLoaded", function() {
     const chartCanvas = document.getElementById("bar-chart");
     let chartInstance = null; // To hold the chart object
 
-    // --- CSV Parsing Function ---
+    // --- NEW: Helper Function to Parse a Single Line ---
+    // This handles commas inside quotes correctly
+    function parseCSVLine(text) {
+        const result = [];
+        let current = '';
+        let inQuote = false;
+        
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if (char === '"') {
+                inQuote = !inQuote;
+            } else if (char === ',' && !inQuote) {
+                result.push(cleanEntry(current));
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(cleanEntry(current));
+        return result;
+    }
+
+    // --- NEW: Helper to remove surrounding quotes ---
+    function cleanEntry(str) {
+        str = str.trim();
+        if (str.startsWith('"') && str.endsWith('"')) {
+            return str.substring(1, str.length - 1);
+        }
+        return str;
+    }
+
+    // --- UPDATED: Main CSV Parsing Function ---
     function parseCSV(text) {
         const lines = text.trim().split('\n');
-        const header = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        const rows = lines.slice(1).map(line => {
-            const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        
+        // Use the smart parser for the header row
+        if (lines.length === 0) return [];
+        const header = parseCSVLine(lines[0]);
+        
+        const rows = [];
+
+        // Loop through the remaining lines
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue; // Skip empty lines
+
+            // Use the smart parser for the data rows
+            const values = parseCSVLine(line);
+            
+            // Create the object mapping headers to values
             let obj = {};
-            header.forEach((h, i) => {
-                obj[h] = values[i];
+            header.forEach((h, index) => {
+                // Ensure we don't access undefined indices
+                obj[h] = values[index] || ""; 
             });
-            return obj;
-        });
+            rows.push(obj);
+        }
         return rows;
     }
 
@@ -113,7 +157,8 @@ document.addEventListener("DOMContentLoaded", function() {
             case 'GO':
             case 'KEGG':
                 // Plot Top 15 by 'Count'
-                const sortedGOData = data.sort((a, b) => b.Count - a.Count).slice(0, 15).reverse();
+                // Ensure 'Count' is treated as a number for sorting
+                const sortedGOData = data.sort((a, b) => Number(b.Count) - Number(a.Count)).slice(0, 15).reverse();
                 chartConfig.data.labels = sortedGOData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGOData.map(row => row.Count);
                 chartConfig.data.datasets[0].label = 'Gene Count';
@@ -122,14 +167,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
             case 'GSEA':
                 // Plot Top 15 by absolute 'NES'
-                const sortedGSEAData = data.sort((a, b) => Math.abs(b.NES) - Math.abs(a.NES)).slice(0, 15).reverse();
+                const sortedGSEAData = data.sort((a, b) => Math.abs(Number(b.NES)) - Math.abs(Number(a.NES))).slice(0, 15).reverse();
                 chartConfig.data.labels = sortedGSEAData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGSEAData.map(row => row.NES);
                 chartConfig.data.datasets[0].label = 'Normalized Enrichment Score (NES)';
                 chartConfig.options.plugins.title.text = 'Top 15 GSEA Results by Normalized Enrichment Score';
                 // Color bars based on positive/negative NES
-                chartConfig.data.datasets[0].backgroundColor = sortedGSEAData.map(row => row.NES > 0 ? 'rgba(255, 99, 132, 0.6)' : 'rgba(54, 162, 235, 0.6)');
-                chartConfig.data.datasets[0].borderColor = sortedGSEAData.map(row => row.NES > 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)');
+                chartConfig.data.datasets[0].backgroundColor = sortedGSEAData.map(row => Number(row.NES) > 0 ? 'rgba(255, 99, 132, 0.6)' : 'rgba(54, 162, 235, 0.6)');
+                chartConfig.data.datasets[0].borderColor = sortedGSEAData.map(row => Number(row.NES) > 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)');
                 break;
         }
 
