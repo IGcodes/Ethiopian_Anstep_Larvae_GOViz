@@ -156,9 +156,9 @@ document.addEventListener("DOMContentLoaded", function() {
         switch (fileType) {
             case 'GO':
             case 'KEGG':
-                // Plot Top 15 by 'Count'
+                // Plot by 'Count'
                 // Ensure 'Count' is treated as a number for sorting
-                const sortedGOData = data.sort((a, b) => Number(b.Count) - Number(a.Count)).slice(0, 15).reverse();
+                const sortedGOData = data.sort((a, b) => Number(b.Count) - Number(a.Count)).reverse(); // .slice(0, 15)
                 chartConfig.data.labels = sortedGOData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGOData.map(row => row.Count);
                 chartConfig.data.datasets[0].label = 'Gene Count';
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             case 'GSEA':
                 // Plot Top 15 by absolute 'NES'
-                const sortedGSEAData = data.sort((a, b) => Math.abs(Number(b.NES)) - Math.abs(Number(a.NES))).slice(0, 15).reverse();
+                const sortedGSEAData = data.sort((a, b) => Math.abs(Number(b.NES)) - Math.abs(Number(a.NES))).reverse(); // .slice(0, 15)
                 chartConfig.data.labels = sortedGSEAData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGSEAData.map(row => row.NES);
                 chartConfig.data.datasets[0].label = 'Normalized Enrichment Score (NES)';
@@ -244,3 +244,4 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- Initial setup ---
     populateDirectorySelect();
 });
+
