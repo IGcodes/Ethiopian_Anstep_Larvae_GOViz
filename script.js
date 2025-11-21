@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 chartConfig.data.labels = sortedGOData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGOData.map(row => row.Count);
                 chartConfig.data.datasets[0].label = 'Gene Count';
-                chartConfig.options.plugins.title.text = 'Top 15 Enriched Terms by Gene Count';
+                chartConfig.options.plugins.title.text = 'Enriched Terms by Gene Count';
                 break;
 
             case 'GSEA':
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 chartConfig.data.labels = sortedGSEAData.map(row => row.Description);
                 chartConfig.data.datasets[0].data = sortedGSEAData.map(row => row.NES);
                 chartConfig.data.datasets[0].label = 'Normalized Enrichment Score (NES)';
-                chartConfig.options.plugins.title.text = 'Top 15 GSEA Results by Normalized Enrichment Score';
+                chartConfig.options.plugins.title.text = 'GSEA Results by Normalized Enrichment Score';
                 // Color bars based on positive/negative NES
                 chartConfig.data.datasets[0].backgroundColor = sortedGSEAData.map(row => Number(row.NES) > 0 ? 'rgba(255, 99, 132, 0.6)' : 'rgba(54, 162, 235, 0.6)');
                 chartConfig.data.datasets[0].borderColor = sortedGSEAData.map(row => Number(row.NES) > 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)');
@@ -244,4 +244,5 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- Initial setup ---
     populateDirectorySelect();
 });
+
 
